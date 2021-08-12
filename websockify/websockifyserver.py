@@ -79,6 +79,7 @@ class WebSockifyRequestHandler(WebSocketRequestHandlerMixIn, SimpleHTTPRequestHa
         self.traffic = getattr(server, "traffic", False)
         self.web_auth = getattr(server, "web_auth", False)
         self.host_token = getattr(server, "host_token", False)
+        
 
         self.logger = getattr(server, "logger", None)
         if self.logger is None:
@@ -325,7 +326,7 @@ class WebSockifyServer():
             file_only=False,
             run_once=False, timeout=0, idle_timeout=0, traffic=False,
             tcp_keepalive=True, tcp_keepcnt=None, tcp_keepidle=None,
-            tcp_keepintvl=None, ssl_ciphers=None, ssl_options=0):
+            tcp_keepintvl=None, ssl_ciphers=None, ssl_options=0, portfd=None):
 
         # settings
         self.RequestHandlerClass = RequestHandlerClass
@@ -356,6 +357,7 @@ class WebSockifyServer():
         self.tcp_keepcnt    = tcp_keepcnt
         self.tcp_keepidle   = tcp_keepidle
         self.tcp_keepintvl  = tcp_keepintvl
+        self.portfd         = portfd
 
         # keyfile path must be None if not specified
         self.key = None
@@ -395,6 +397,8 @@ class WebSockifyServer():
                 self.msg("  - Web server (no directory listings). Web root: %s", self.web)
             else:
                 self.msg("  - Web server. Web root: %s", self.web)
+        if self.portfd:
+            self.msg("  - Listening Port written to %s", self.portfd)
         if ssl:
             if os.path.exists(self.cert):
                 self.msg("  - SSL/TLS support")
@@ -707,7 +711,13 @@ class WebSockifyServer():
                                 tcp_keepcnt=self.tcp_keepcnt,
                                 tcp_keepidle=self.tcp_keepidle,
                                 tcp_keepintvl=self.tcp_keepintvl)
-
+            if self.portfd and not self.listen_fd:
+                addr, port = lsock.getsockname()
+                with open(self.portfd,'w') as f:
+                    f.write(str(port))
+            if self.listen_port == 0:           
+                addr, port = lsock.getsockname()
+                self.msg("  - Ephemeral port : %d", port)
         if self.daemon:
             keepfd = self.get_log_fd()
             keepfd.append(lsock.fileno())

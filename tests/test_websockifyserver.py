@@ -398,3 +398,12 @@ class WebSockifyServerTestCase(unittest.TestCase):
                                             socket.TCP_KEEPIDLE), keepidle)
         self.assertNotEqual(sock.getsockopt(socket.SOL_TCP,
                                             socket.TCP_KEEPINTVL), keepintvl)
+    
+    def test_port_number_written_to_fd_for_portfd_option(self):
+        port_file = 'port_file'
+        server = self._get_server(daemon=True, ssl_only=1, idle_timeout=1,portfd="port_file")
+        server.start_server()
+        self.assertTrue(os.path.exists(port_file))
+        with open(port_file) as f:
+            self.assertEqual(f.read().rstrip("\n"), '80')
+        

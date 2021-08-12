@@ -517,7 +517,11 @@ def websockify_init():
     parser.add_option("--legacy-syslog", action="store_true",
                       help="Use the old syslog protocol instead of RFC 5424. "
                            "Use this if the messages produced by websockify seem abnormal.")
-
+    parser.add_option("--portfd", default=None, metavar="file",
+                      help="Write the listening port to a file descriptor. "
+                           "Use this to detect the port when binding to port 0 (ephemeral port)")
+    parser.add_option("--file_only", action="store_true",
+                      help="Don't list directory contents when using the --web option.")
     (opts, args) = parser.parse_args()
 
 
