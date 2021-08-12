@@ -9,4 +9,6 @@ target.cfg.d
 
 build/
 dist/
+.env/
+test/
 *.egg-info

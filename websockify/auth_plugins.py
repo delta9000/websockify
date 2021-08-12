@@ -1,3 +1,5 @@
+import getpass
+
 class BasePlugin():
     def __init__(self, src=None):
         self.source = src
@@ -100,3 +102,14 @@ class ClientCertCNAuth():
     def authenticate(self, headers, target_host, target_port):
         if headers.get('SSL_CLIENT_S_DN_CN', None) not in self.source:
             raise AuthenticationError(response_code=403)
+
+class RemoteUserAuth():
+    """Verifies client by REMOTE USER header."""
+
+    def __init__(self, src=None):
+        self.src = getpass.getuser()
+
+    def authenticate(self, headers, target_host, target_port):
+        remote_user = headers.get('X-Forwarded-User', None)
+        if remote_user != self.src:
+            raise AuthenticationError(response_code=403,log_msg=f"Rejected Invalid user {remote_user}")
